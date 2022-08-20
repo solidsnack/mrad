@@ -1,5 +1,6 @@
 import { Svg, SVG } from "@svgdotjs/svg.js"
 
+import { DrawIn } from "./draw-in"
 import { setupContainer } from "./margins-and-viewboxes"
 import { Style, StyleInfo } from "./style"
 import { PageSize } from "../pages"
@@ -11,7 +12,7 @@ const blue = "#002868"
 const red = "#BF0A30"
 const gray = "#F0F0F0"
 
-export const ManyMM: StyleInfo = class ManyMM implements Style {
+export const ManyMM: StyleInfo & DrawIn = class ManyMM implements Style {
     static readonly diameter: number = 200
     static readonly width: number = ManyMM.diameter
     static readonly height: number = ManyMM.diameter
@@ -21,114 +22,114 @@ export const ManyMM: StyleInfo = class ManyMM implements Style {
         const outerSVG = SVG().addTo(element)
         const svg = setupContainer(outerSVG, page, ManyMM)
 
-        drawInSVG(svg)
+        ManyMM.drawIn(svg)
     }
-}
 
-export function drawInSVG(svg: Svg) {
-    const maxDiameter = Math.max(ManyMM.width, ManyMM.height)
+    static drawIn(svg: Svg) {
+        const maxDiameter = Math.max(ManyMM.width, ManyMM.height)
 
-    const mask = svg.mask()
-    const wedges = 16
-    for (const wedge of indexArray(wedges)) {
-        const step = wholeCircle / wedges
-        const centerAngle = wedge * step
+        const mask = svg.mask()
+        const wedges = 16
+        for (const wedge of indexArray(wedges)) {
+            const step = wholeCircle / wedges
+            const centerAngle = wedge * step
 
-        mask.add(
-            drawWedge(
-                svg,
-                wedge % 2 === 1 ? "#808080" : "white",
-                1,
-                maxDiameter,
-                centerAngle - step / 2,
-                centerAngle + step / 2
+            mask.add(
+                drawWedge(
+                    svg,
+                    wedge % 2 === 1 ? "#808080" : "white",
+                    1,
+                    maxDiameter,
+                    centerAngle - step / 2,
+                    centerAngle + step / 2
+                )
             )
-        )
-    }
-
-    const diameters = indexArray(maxDiameter / stepSize)
-        .map((n) => stepSize * (n + 1))
-        .sort((a, b) => a - b)
-
-    const redRings = new ColoredRings(red, 1, [[100, 80]])
-    const blueRings = new ColoredRings(blue, 1, [[50, 40]])
-    const specialGrayRings = new ColoredRings(
-        gray,
-        1,
-        [160, 125, 80, 64, 40, 32, 25, 16].map((n) => [n, n - 1])
-    )
-
-    const half = stepSize / 2
-    const countsAsInside = ["inside", "outer-edge"]
-
-    for (const diameter of diameters) {
-        let onInnerEdgeOfSomething = false
-        let inSpecialRing = false
-        let [color, opacity] = [gray, 1]
-
-        for (const ring of [redRings, blueRings, specialGrayRings]) {
-            const check = ring.check(diameter)
-            if (check === "inner-edge") onInnerEdgeOfSomething = true
-            if (!countsAsInside.includes(ring.check(diameter))) continue
-            color = ring.color
-            opacity = ring.opacity
-            inSpecialRing = true
         }
 
-        const cells = cellsForDiameter(diameter)
-        const parityShift = Math.ceil(diameter / 10) % 2
-        if (color === gray) {
-            if (inSpecialRing) {
-                drawDottedCircle(
-                    svg,
-                    color,
-                    opacity,
-                    diameter,
-                    half,
-                    cells / 2,
-                    evenOdd(diameter + parityShift),
-                    "four-fifths"
-                ).maskWith(mask)
-            } else {
-                switch (diameter % 10) {
-                    case 0:
-                        drawCircle(
-                            svg,
-                            color,
-                            opacity,
-                            diameter,
-                            half
-                        ).maskWith(mask)
-                        break
-                    case 9:
-                        break
-                    default:
-                        if (onInnerEdgeOfSomething) continue
-                        drawCircle(
-                            svg,
-                            color,
-                            opacity,
-                            diameter,
-                            half / 5
-                        ).maskWith(mask)
-                }
+        const diameters = indexArray(maxDiameter / stepSize)
+            .map((n) => stepSize * (n + 1))
+            .sort((a, b) => a - b)
+
+        const redRings = new ColoredRings(red, 1, [[100, 80]])
+        const blueRings = new ColoredRings(blue, 1, [[50, 40]])
+        const specialGrayRings = new ColoredRings(
+            gray,
+            1,
+            [160, 125, 80, 64, 40, 32, 25, 16].map((n) => [n, n - 1])
+        )
+
+        const half = stepSize / 2
+        const countsAsInside = ["inside", "outer-edge"]
+
+        for (const diameter of diameters) {
+            let onInnerEdgeOfSomething = false
+            let inSpecialRing = false
+            let [color, opacity] = [gray, 1]
+
+            for (const ring of [redRings, blueRings, specialGrayRings]) {
+                const check = ring.check(diameter)
+                if (check === "inner-edge") onInnerEdgeOfSomething = true
+                if (!countsAsInside.includes(ring.check(diameter))) continue
+                color = ring.color
+                opacity = ring.opacity
+                inSpecialRing = true
             }
-        } else {
-            switch (diameter % 10) {
-                case 0:
-                    drawCircle(svg, color, opacity, diameter, half)
-                    break
-                default:
+
+            const cells = cellsForDiameter(diameter)
+            const parityShift = Math.ceil(diameter / 10) % 2
+            if (color === gray) {
+                if (inSpecialRing) {
                     drawDottedCircle(
                         svg,
                         color,
                         opacity,
                         diameter,
                         half,
-                        cells,
+                        cells / 2,
                         evenOdd(diameter + parityShift),
-                        "evenly-spaced"
-                    )
+                        "four-fifths"
+                    ).maskWith(mask)
+                } else {
+                    switch (diameter % 10) {
+                        case 0:
+                            drawCircle(
+                                svg,
+                                color,
+                                opacity,
+                                diameter,
+                                half
+                            ).maskWith(mask)
+                            break
+                        case 9:
+                            break
+                        default:
+                            if (onInnerEdgeOfSomething) continue
+                            drawCircle(
+                                svg,
+                                color,
+                                opacity,
+                                diameter,
+                                half / 5
+                            ).maskWith(mask)
+                    }
+                }
+            } else {
+                switch (diameter % 10) {
+                    case 0:
+                        drawCircle(svg, color, opacity, diameter, half)
+                        break
+                    default:
+                        drawDottedCircle(
+                            svg,
+                            color,
+                            opacity,
+                            diameter,
+                            half,
+                            cells,
+                            evenOdd(diameter + parityShift),
+                            "evenly-spaced"
+                        )
+                }
             }
         }
     }

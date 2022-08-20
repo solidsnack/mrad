@@ -1,5 +1,6 @@
 import { Svg, SVG } from "@svgdotjs/svg.js"
 
+import { DrawIn } from "./draw-in"
 import { setupContainer } from "./margins-and-viewboxes"
 import { Style, StyleInfo } from "./style"
 import { PageSize } from "../pages"
@@ -8,7 +9,9 @@ import { indexArray } from "../utils/array"
 const gray = "#C0C0C0"
 const lighterGray = "#F0F0F0"
 
-export const GrayCircle20: StyleInfo = class GrayCircle20 implements Style {
+export const GrayCircle20: StyleInfo & DrawIn = class GrayCircle20
+    implements Style
+{
     static readonly diameter: number = 200
     static readonly width: number = GrayCircle20.diameter
     static readonly height: number = GrayCircle20.diameter
@@ -18,41 +21,41 @@ export const GrayCircle20: StyleInfo = class GrayCircle20 implements Style {
         const svg = SVG().addTo(element)
         const innerSVGWithMargin = setupContainer(svg, page, GrayCircle20)
 
-        drawInSVG(innerSVGWithMargin)
+        GrayCircle20.drawIn(innerSVGWithMargin)
     }
-}
 
-export function drawInSVG(svg: Svg) {
-    const maxDiameter = Math.max(GrayCircle20.width, GrayCircle20.height)
-    const stepSize = 10
+    static drawIn(svg: Svg) {
+        const maxDiameter = Math.max(GrayCircle20.width, GrayCircle20.height)
+        const stepSize = 10
 
-    const diameters = indexArray(maxDiameter / stepSize)
-        .map((n) => stepSize * (n + 1))
-        .sort((a, b) => a - b)
+        const diameters = indexArray(maxDiameter / stepSize)
+            .map((n) => stepSize * (n + 1))
+            .sort((a, b) => a - b)
 
-    // We don't need the last one, because, a special style is applied at the
-    // outmost ring.
-    diameters.pop()
+        // We don't need the last one, because, a special style is applied at
+        // the outmost ring.
+        diameters.pop()
 
-    const boldStrokeWidth = 1
-    const correctedDiameter = maxDiameter - boldStrokeWidth
+        const boldStrokeWidth = 1
+        const correctedDiameter = maxDiameter - boldStrokeWidth
 
-    if (correctedDiameter <= 0)
-        throw new Error("Width of arc greater than radius!")
+        if (correctedDiameter <= 0)
+            throw new Error("Width of arc greater than radius!")
 
-    svg.circle(correctedDiameter).cx(0).cy(0).fill("none").stroke({
-        color: gray,
-        width: boldStrokeWidth,
-        opacity: 1.0,
-    })
-
-    const narrowStrokeWidth = 0.1
-    for (const diameter of diameters) {
-        const correctedDiameter = diameter - narrowStrokeWidth
         svg.circle(correctedDiameter).cx(0).cy(0).fill("none").stroke({
-            color: lighterGray,
-            width: narrowStrokeWidth,
+            color: gray,
+            width: boldStrokeWidth,
             opacity: 1.0,
         })
+
+        const narrowStrokeWidth = 0.1
+        for (const diameter of diameters) {
+            const correctedDiameter = diameter - narrowStrokeWidth
+            svg.circle(correctedDiameter).cx(0).cy(0).fill("none").stroke({
+                color: lighterGray,
+                width: narrowStrokeWidth,
+                opacity: 1.0,
+            })
+        }
     }
 }

@@ -1,15 +1,14 @@
+import { dual } from "./generic-dual"
 import { GrayCircle20 } from "./gray-circle"
-import { GrayCircle20Dual } from "./gray-circle-dual"
 import { ManyMM } from "./many-mm"
-import { ManyMMDual } from "./many-mm-dual"
 
 export { type Style, type StyleInfo } from "./style"
 
 export const styles = {
     grayCircle20: GrayCircle20,
-    grayCircle20Dual: GrayCircle20Dual,
+    grayCircle20Dual: dual(GrayCircle20),
     manyMM: ManyMM,
-    manyMMDual: ManyMMDual,
+    manyMMDual: dual(ManyMM),
 }
 
 export { margins } from "./margins-and-viewboxes"
