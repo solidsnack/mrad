@@ -1,6 +1,7 @@
 import { dual } from "./generic-dual"
 import { GrayCircle20 } from "./gray-circle"
-import { ManyMM } from "./many-mm"
+// import { ManyMM } from "./many-mm"
+import { ManyMM } from "./many-mm-radial-lines"
 
 export { type Style, type StyleInfo } from "./style"
 

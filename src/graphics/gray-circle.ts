@@ -7,7 +7,6 @@ import { PageSize } from "../pages"
 import { indexArray } from "../utils/array"
 
 const gray = "#C0C0C0"
-const lighterGray = "#F0F0F0"
 
 export const GrayCircle20: StyleInfo & DrawIn = class GrayCircle20
     implements Style
@@ -52,7 +51,7 @@ export const GrayCircle20: StyleInfo & DrawIn = class GrayCircle20
         for (const diameter of diameters) {
             const correctedDiameter = diameter - narrowStrokeWidth
             svg.circle(correctedDiameter).cx(0).cy(0).fill("none").stroke({
-                color: lighterGray,
+                color: gray,
                 width: narrowStrokeWidth,
                 opacity: 1.0,
             })
