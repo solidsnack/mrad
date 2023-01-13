@@ -1,4 +1,5 @@
 import { Svg, SVG } from "@svgdotjs/svg.js"
+import { isPresent } from "ts-is-present"
 
 import { DrawIn } from "./draw-in"
 import { setupContainer } from "./margins-and-viewboxes"
@@ -65,12 +66,14 @@ export const ManyMM: StyleInfo & DrawIn = class ManyMM implements Style {
 
         for (const diameter of diameters) {
             let onInnerEdgeOfSomething = false
+            let onOuterEdgeOfSomething = false
             let inSpecialRing = false
             let [color, opacity] = [gray, 1]
 
             for (const ring of [redRings, blueRings, specialGrayRings]) {
                 const check = ring.check(diameter)
                 if (check === "inner-edge") onInnerEdgeOfSomething = true
+                if (check === "outer-edge") onOuterEdgeOfSomething = true
                 if (!countsAsInside.includes(ring.check(diameter))) continue
                 color = ring.color
                 opacity = ring.opacity
@@ -78,7 +81,8 @@ export const ManyMM: StyleInfo & DrawIn = class ManyMM implements Style {
             }
 
             const cells = cellsForDiameter(diameter)
-            const parityShift = Math.ceil(diameter / 10) % 2
+            // const parityShift = Math.ceil(diameter / 10) % 2
+            const parityShift = 0
             if (color === gray) {
                 if (inSpecialRing) {
                     drawDottedCircle(
@@ -112,7 +116,21 @@ export const ManyMM: StyleInfo & DrawIn = class ManyMM implements Style {
             } else {
                 switch (diameter % 10) {
                     case 0:
-                        drawCircle(svg, color, opacity, diameter, half)
+                        if (onOuterEdgeOfSomething) {
+                            drawCircle(svg, color, opacity, diameter, half)
+                        } else {
+                            drawDottedCircle(
+                                svg,
+                                color,
+                                opacity,
+                                diameter,
+                                half,
+                                cells,
+                                evenOdd(diameter + parityShift),
+                                "evenly-spaced",
+                                { color, opacity: opacity / 2 }
+                            )
+                        }
                         break
                     default:
                         drawDottedCircle(
@@ -219,7 +237,8 @@ function drawDottedCircle(
     width: number,
     dots: number,
     parity: "even" | "odd",
-    style: "evenly-spaced" | "four-fifths"
+    style: "evenly-spaced" | "four-fifths",
+    contrast?: { color: string; opacity: number }
 ) {
     const step = (2 * Math.PI) / dots
 
@@ -234,6 +253,20 @@ function drawDottedCircle(
     }
 
     const g = svg.group()
+
+    // Ad-hoc and only really works when main color is 100% opacity; but that
+    // is our use case.
+    if (isPresent(contrast)) {
+        g.add(
+            drawCircle(
+                svg,
+                contrast.color,
+                contrast.opacity,
+                outerDiameter,
+                width
+            )
+        )
+    }
 
     for (const i of indexArray(dots)) {
         const centerAngle = step * (i + (parity === "even" ? 0 : 0.5))
