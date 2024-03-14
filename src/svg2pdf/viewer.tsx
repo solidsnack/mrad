@@ -88,8 +88,12 @@ export class Viewer extends React.Component<{ svg: string }> {
         if (svgRoot.tagName !== "svg") return
 
         const { width, height } = svgObject.getBoundingClientRect()
-        pdfObject.width = `${width}`
-        pdfObject.height = `${height}`
+        // A little padding is needed for the object size, perhaps to allow
+        // for PDF controls and the margins of the viewer, in order to get the
+        // PDF viewer to render at 100% scale.
+        const shim = 20
+        pdfObject.width = `${width + shim}`
+        pdfObject.height = `${height + shim}`
 
         this.pdfBlob()
             .then((blob) => {
