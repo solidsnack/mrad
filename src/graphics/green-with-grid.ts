@@ -27,16 +27,39 @@ export const GreenWithGrid20: StyleInfo & DrawIn = class GreenWithGrid20
     static drawIn(svg: Svg) {
         const diameter = GreenWithGrid20.diameter
         const strokeWidth = diameter / 4
-        const correctedDiameter = diameter - strokeWidth
+        const midDiameter = diameter - strokeWidth
 
-        if (correctedDiameter <= 0)
+        if (midDiameter <= 0)
             throw new Error("Width of arc greater than radius!")
 
-        svg.circle(correctedDiameter).cx(0).cy(0).fill("none").stroke({
-            color: color,
-            width: strokeWidth,
-            opacity: 1.0,
-        })
+        // NB: We add more things to the mask below.
+        // NB: We can't use the stroke and no-fill technique for this circle,
+        //     because it interacts badly with masking. If we use that
+        //     technique, adding a mask causes the circle to be clipped as
+        //     though a square mask were applied to it, regardless of the
+        //     actual contents of the mask!
+        const ring = svg.circle(diameter).cx(0).cy(0).fill(color)
+        const maskForRing = svg
+            .mask()
+            .add(ring.clone().fill("white"))
+            .add(
+                svg
+                    .circle(diameter / 2)
+                    .cx(0)
+                    .cy(0)
+                    .fill("black")
+            )
+
+        const maskForDots = svg
+            .mask()
+            .add(svg.rect(diameter, diameter).cx(0).cy(0).fill("white"))
+            .add(
+                svg.circle(midDiameter).cx(0).cy(0).fill("none").stroke({
+                    color: "black",
+                    width: strokeWidth,
+                    opacity: 1.0,
+                })
+            )
 
         const quarterDiameter = diameter / 4
 
@@ -58,32 +81,41 @@ export const GreenWithGrid20: StyleInfo & DrawIn = class GreenWithGrid20
 
         for (const x of centimeterCenters) {
             for (const y of centimeterCenters) {
-                drawCorneredCMSquare(svg, { x, y })
+                const corners = drawCorneredCMSquare(svg, { x, y })
+                for (const corner of corners) {
+                    maskForRing.add(corner.clone().fill("black"))
+                    corner.maskWith(maskForDots)
+                }
             }
         }
+
+        ring.maskWith(maskForRing)
     }
 }
 
 function drawCorneredCMSquare(svg: Svg, center: { x: number; y: number }) {
     const { x, y } = center
-    const g = svg.group()
     const hd = 0.5
 
-    g.path(`M ${x + 5} ${y + 5} l -${hd} 0 l ${hd} -${hd}`)
+    const southwest = svg
+        .path(`M ${x + 5} ${y + 5} l -${hd} 0 l ${hd} -${hd}`)
         .fill(gray)
         .stroke("none")
 
-    g.path(`M ${x - 5} ${y + 5} l ${hd} 0 l -${hd} -${hd}`)
+    const southeast = svg
+        .path(`M ${x - 5} ${y + 5} l ${hd} 0 l -${hd} -${hd}`)
         .fill(gray)
         .stroke("none")
 
-    g.path(`M ${x + 5} ${y - 5} l -${hd} 0 l ${hd} ${hd}`)
+    const northwest = svg
+        .path(`M ${x + 5} ${y - 5} l -${hd} 0 l ${hd} ${hd}`)
         .fill(gray)
         .stroke("none")
 
-    g.path(`M ${x - 5} ${y - 5} l ${hd} 0 l -${hd} ${hd}`)
+    const northeast = svg
+        .path(`M ${x - 5} ${y - 5} l ${hd} 0 l -${hd} ${hd}`)
         .fill(gray)
         .stroke("none")
 
-    return g
+    return [southwest, southeast, northwest, northeast]
 }
